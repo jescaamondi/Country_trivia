@@ -151,6 +151,37 @@ void main() {
         expect(bloc.state.totalCountries, pool.length);
       },
     );
+
+    test('clears the stale error message while retrying', () async {
+      var calls = 0;
+      when(() => getCountries()).thenAnswer((_) async {
+        calls++;
+        return calls == 1
+            ? Result<List<Country>>.failure(const NetworkFailure())
+            : Result<List<Country>>.success(pool);
+      });
+      final bloc = buildBloc();
+      addTearDown(bloc.close);
+
+      bloc.add(const GameStarted());
+      await waitFor(bloc, (s) => s.status == GameStatus.failure);
+      expect(bloc.state.errorMessage, isNotEmpty);
+
+      // Retry and look specifically at the intermediate loading state, which
+      // is built with copyWith rather than a fresh GameState.
+      emitted.clear();
+      bloc.add(const GameStarted());
+      await waitFor(bloc, (s) => s.status == GameStatus.playing);
+
+      final loading = emitted.firstWhere(
+        (s) => s.status == GameStatus.loading,
+      );
+      expect(
+        loading.errorMessage,
+        isNull,
+        reason: 'the loading state must not carry a stale error',
+      );
+    });
   });
 
   group('non repeating questions', () {

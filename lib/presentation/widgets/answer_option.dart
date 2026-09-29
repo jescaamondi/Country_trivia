@@ -13,6 +13,10 @@ enum OptionVisualState {
   /// The correct answer, revealed either by a correct guess or by running out
   /// of attempts.
   correct,
+
+  /// Never guessed and no longer in play once the round is resolved: closed
+  /// off, but not singled out as a mistake.
+  muted,
 }
 
 /// A tappable answer in the multiple choice list.
@@ -48,6 +52,11 @@ class AnswerOption extends StatelessWidget {
         AppColors.success,
         AppColors.success,
       ),
+      OptionVisualState.muted => (
+        AppColors.surface,
+        AppColors.border,
+        AppColors.textSecondary,
+      ),
     };
 
     return Semantics(
@@ -71,7 +80,8 @@ class AnswerOption extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  if (_isDisabled) ...[
+                  if (visualState == OptionVisualState.wrong ||
+                      visualState == OptionVisualState.correct) ...[
                     Icon(_icon, color: foreground, size: 20),
                     const SizedBox(width: 12),
                   ],
@@ -80,12 +90,8 @@ class AnswerOption extends StatelessWidget {
                       country.name,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: _isDisabled
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _isDisabled
-                            ? foreground
-                            : AppColors.textPrimary,
+                        fontWeight: _fontWeight,
+                        color: _isDisabled ? foreground : AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -101,4 +107,10 @@ class AnswerOption extends StatelessWidget {
   IconData get _icon => visualState == OptionVisualState.correct
       ? Icons.check_circle
       : Icons.cancel;
+
+  /// Resolved options are emphasised, muted ones stay at the resting weight.
+  FontWeight get _fontWeight => switch (visualState) {
+    OptionVisualState.wrong || OptionVisualState.correct => FontWeight.w700,
+    OptionVisualState.idle || OptionVisualState.muted => FontWeight.w500,
+  };
 }

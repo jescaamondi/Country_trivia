@@ -235,6 +235,55 @@ void main() {
 
       expect(bloc.state.status, GameStatus.completed);
     });
+
+    test(
+      'four options are offered even when every earlier flag was failed',
+      () async {
+        // A failed country still counts as played, so it has to stay available
+        // as a distractor. Otherwise the closing rounds would drop to three
+        // options - and the last rounds are the ones with the fewest to spare.
+        stubSuccess([kenya, peru, togo, chad]);
+        final bloc = buildBloc();
+        addTearDown(bloc.close);
+
+        await startGame(bloc);
+
+        for (var i = 0; i < 4; i++) {
+          expect(
+            bloc.state.question!.options,
+            hasLength(4),
+            reason: 'round $i should still offer four options',
+          );
+          expect(bloc.state.question!.options.toSet(), hasLength(4));
+
+          // Burn all three attempts on wrong options every single time.
+          for (var attempt = 1; attempt <= 3; attempt++) {
+            await dispatch(
+              bloc,
+              QuizOptionSelected(wrongOptionIn(bloc.state)),
+              (s) => s.attemptsUsed == attempt,
+            );
+          }
+          expect(
+            bloc.state.solvedCount,
+            i + 1,
+            reason: 'a failed flag still counts as played',
+          );
+
+          await dispatch(
+            bloc,
+            const QuizNextRequested(),
+            (s) =>
+                s.status == GameStatus.playing ||
+                s.status == GameStatus.completed,
+          );
+        }
+
+        expect(bloc.state.status, GameStatus.completed);
+        expect(bloc.state.correctAnswers, 0);
+        expect(bloc.state.score, 0);
+      },
+    );
   });
 
   group('attempt based scoring', () {

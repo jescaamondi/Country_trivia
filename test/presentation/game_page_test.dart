@@ -98,6 +98,40 @@ void main() {
       await tester.tap(find.text('Kenya'));
       expect(taps, 1, reason: 'locked options must not be tappable');
     });
+
+    testWidgets('renders muted without a verdict icon', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AnswerOption(
+              country: pool.first,
+              visualState: OptionVisualState.muted,
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      // A muted option is closed off, but was never actually guessed wrong,
+      // so it must not carry the red cancel icon.
+      expect(find.byIcon(Icons.cancel), findsNothing);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+
+      var taps = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AnswerOption(
+              country: pool.first,
+              visualState: OptionVisualState.muted,
+              onTap: () => taps++,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Kenya'));
+      expect(taps, 0, reason: 'a muted option is no longer in play');
+    });
   });
 
   group('GamePage', () {

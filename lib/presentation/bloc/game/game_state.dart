@@ -70,6 +70,10 @@ class GameState extends Equatable {
 
   final String? errorMessage;
 
+  /// Sentinel telling [copyWith] that an argument was not supplied, so a
+  /// nullable field can still be explicitly reset back to `null`.
+  static const Object _unset = Object();
+
   /// Attempts still available for the current flag.
   int get attemptsRemaining {
     final left = AttemptScoring.maxAttempts - attemptsUsed;
@@ -96,29 +100,35 @@ class GameState extends Equatable {
 
   GameState copyWith({
     GameStatus? status,
-    QuizQuestion? question,
+    Object? question = _unset,
     int? solvedCount,
     int? correctAnswers,
     int? totalCountries,
     int? score,
     int? attemptsUsed,
     Set<String>? wrongOptions,
-    bool? answeredCorrectly,
+    Object? answeredCorrectly = _unset,
     int? pointsEarned,
-    String? errorMessage,
+    Object? errorMessage = _unset,
   }) {
     return GameState(
       status: status ?? this.status,
-      question: question ?? this.question,
+      question: identical(question, _unset)
+          ? this.question
+          : question as QuizQuestion?,
       solvedCount: solvedCount ?? this.solvedCount,
       correctAnswers: correctAnswers ?? this.correctAnswers,
       totalCountries: totalCountries ?? this.totalCountries,
       score: score ?? this.score,
       attemptsUsed: attemptsUsed ?? this.attemptsUsed,
       wrongOptions: wrongOptions ?? this.wrongOptions,
-      answeredCorrectly: answeredCorrectly ?? this.answeredCorrectly,
+      answeredCorrectly: identical(answeredCorrectly, _unset)
+          ? this.answeredCorrectly
+          : answeredCorrectly as bool?,
       pointsEarned: pointsEarned ?? this.pointsEarned,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 

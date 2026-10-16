@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Owns the whole run: the country pool, question dealing, attempt tracking
 /// and scoring.
 ///
-/// The pools that are not needed for rendering ([_pool], [_completed],
+/// The pools that are not needed for rendering ([_pool], [_played],
 /// [_all]) are held as private fields so [GameState] stays cheap to compare
 /// and widgets never rebuild because of them.
 class GameBloc extends Bloc<GameEvent, GameState> {
@@ -38,8 +38,11 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   /// Countries that can still become the answer, shuffled.
   List<Country> _pool = const [];
 
-  /// Countries already played, used to fill distractors in the final rounds.
-  List<Country> _completed = const [];
+  /// Every country that has already been the answer, solved or not.
+  ///
+  /// Doubles as the source of spare distractors once [_pool] runs dry, so the
+  /// closing rounds still get a full set of four options.
+  List<Country> _played = const [];
 
   Future<void> _onStarted(GameStarted event, Emitter<GameState> emit) async {
     emit(state.copyWith(status: GameStatus.loading, errorMessage: null));
@@ -60,7 +63,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
   void _onLoadFailed(GameLoadFailed event, Emitter<GameState> emit) {
     _pool = const [];
-    _completed = const [];
+    _played = const [];
     _all = const [];
     emit(GameState(status: GameStatus.failure, errorMessage: event.message));
   }
@@ -78,12 +81,12 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
     if (selected == question.answer) {
       final points = AttemptScoring.pointsForAttempt(attempt);
-      _completed = [..._completed, question.answer];
+      _played = [..._played, question.answer];
 
       emit(
         state.copyWith(
           status: GameStatus.answered,
-          solvedCount: _completed.length,
+          solvedCount: _played.length,
           correctAnswers: state.correctAnswers + 1,
           score: state.score + points,
           attemptsUsed: attempt,
@@ -99,10 +102,12 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
     if (attemptsUsed >= AttemptScoring.maxAttempts) {
       // Out of attempts: 0 points, the answer gets revealed, move on.
+      _played = [..._played, question.answer];
+
       emit(
         state.copyWith(
           status: GameStatus.answered,
-          solvedCount: _completed.length + 1,
+          solvedCount: _played.length,
           attemptsUsed: attemptsUsed,
           wrongOptions: wrongOptions,
           answeredCorrectly: false,
@@ -149,7 +154,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   void _startRun(List<Country> countries) {
     _all = List.unmodifiable(countries);
     _pool = List<Country>.of(countries)..shuffle(_random);
-    _completed = const [];
+    _played = const [];
   }
 
   /// Deals the next flag and builds the state for the opening of a round.
@@ -161,14 +166,14 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     final question = QuizQuestion.create(
       answer: answer,
       distractorPool: _pool,
-      fallbackPool: _completed,
+      fallbackPool: _played,
       random: _random,
     );
 
     return GameState(
       status: GameStatus.playing,
       question: question,
-      solvedCount: _completed.length,
+      solvedCount: _played.length,
       correctAnswers: correctAnswers,
       totalCountries: _all.length,
       score: score,

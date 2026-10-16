@@ -77,62 +77,58 @@ class _QuizBody extends StatelessWidget {
     final question = state.question;
     if (question == null) return const LoadingView();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ScoreHeader(state: state),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Which country does this flag belong to?',
-                    style: Theme.of(context).textTheme.titleLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  AspectRatio(
-                    aspectRatio: 3 / 2,
-                    child: FlagImage(isoCode: question.answer.isoCode),
-                  ),
-                  const SizedBox(height: 20),
-                  for (final option in question.options) ...[
-                    AnswerOption(
-                      key: ValueKey('option-${option.isoCode}'),
-                      country: option,
-                      visualState: _visualStateFor(state, option),
-                      onTap: () => onOptionSelected(option),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  if (state.canAdvance) ...[
-                    const SizedBox(height: 6),
-                    FeedbackBanner(state: state),
-                    const SizedBox(height: 14),
-                    FilledButton.icon(
-                      key: const Key('next_button'),
-                      onPressed: onNext,
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('Next flag'),
-                    ),
-                  ],
-                ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ScoreHeader(state: state),
+              const SizedBox(height: 24),
+              Text(
+                'Which country does this flag belong to?',
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
-            ),
+              const SizedBox(height: 16),
+              AspectRatio(
+                aspectRatio: 3 / 2,
+                child: FlagImage(isoCode: question.answer.isoCode),
+              ),
+              const SizedBox(height: 20),
+              for (final option in question.options) ...[
+                AnswerOption(
+                  key: ValueKey('option-${option.isoCode}'),
+                  country: option,
+                  visualState: _visualStateFor(state, option),
+                  onTap: () => onOptionSelected(option),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (state.canAdvance) ...[
+                const SizedBox(height: 6),
+                FeedbackBanner(state: state),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  key: const Key('next_button'),
+                  onPressed: onNext,
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text('Next flag'),
+                ),
+              ],
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   /// Maps a round's internal bookkeeping onto what the option should look
   /// like: wrong once guessed, correct once the round is resolved, neutral
   /// otherwise.
-  static OptionVisualState _visualStateFor(GameState state, option) {
+  static OptionVisualState _visualStateFor(GameState state, Country option) {
     if (state.status == GameStatus.answered) {
       return option == state.question!.answer
           ? OptionVisualState.correct

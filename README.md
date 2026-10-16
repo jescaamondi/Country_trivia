@@ -91,14 +91,3 @@ flutter test
 Coverage includes the data sources and repository fallbacks, the full bloc
 (lifecycle, non-repeating questions, per-attempt scoring, input guards, reset)
 and widget tests for the quiz screen and the results screen.
-
-## Known issues
-
-Tracked and addressed by the follow-up pull requests:
-
-- rounds can fall back to three answer options once the pool runs dry and the
-  player has been failing flags
-- a successful retry does not clear the error message from the previous failure
-- options the player never guessed are painted red, as if they were mistakes
-- `test/widget_test.dart` is still the Flutter counter template and does not
-  compile

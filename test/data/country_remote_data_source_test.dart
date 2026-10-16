@@ -21,11 +21,9 @@ void main() {
     });
 
     test('reads a bare array payload', () {
-      final countries = HttpCountryRemoteDataSource.parseCountries({
-        'data': [
-          {'country': 'Fiji', 'iso2': 'FJ'},
-        ],
-      });
+      final countries = HttpCountryRemoteDataSource.parseCountries([
+        {'country': 'Fiji', 'iso2': 'FJ'},
+      ]);
 
       expect(countries.single.name, 'Fiji');
     });

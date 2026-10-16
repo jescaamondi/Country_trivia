@@ -33,7 +33,7 @@ class HttpCountryRemoteDataSource implements CountryRemoteDataSource {
   /// array, `{data: [...]}`, `{countries: [...]}`, or a nested
   /// `{data: {countries: [...]}}`.
   @visibleForTesting
-  static List<Country> parseCountries(Map<String, dynamic> json) {
+  static List<Country> parseCountries(Object? json) {
     Object? node = json;
 
     for (var depth = 0; depth < 3; depth++) {

@@ -18,8 +18,12 @@ class ApiClient {
   final http.Client _client;
   final Duration _timeout;
 
-  /// Issues a GET request and returns the decoded JSON object.
-  Future<Map<String, dynamic>> getJson(String url) async {
+  /// Issues a GET request and returns the decoded JSON body.
+  ///
+  /// The body is returned as [Object] because country feeds disagree on the
+  /// root shape: some return a bare array, others an envelope object. Shape
+  /// handling belongs to the data source that knows the provider.
+  Future<Object?> getJson(String url) async {
     late final http.Response response;
     try {
       response = await _client
@@ -41,11 +45,7 @@ class ApiClient {
     }
 
     try {
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        throw const ParseException('Expected a JSON object at the root.');
-      }
-      return decoded;
+      return jsonDecode(response.body);
     } on FormatException {
       throw const ParseException('The response body was not valid JSON.');
     }
